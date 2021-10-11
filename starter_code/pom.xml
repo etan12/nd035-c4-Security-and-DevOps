@@ -64,7 +64,29 @@
 		    <artifactId>tomcat-maven-plugin</artifactId>
 		    <version>1.1</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.splunk/splunk -->
+		<dependency>
+			<groupId>com.splunk</groupId>
+			<artifactId>splunk</artifactId>
+			<version>1.6.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.13.0</version>
+		</dependency>
+
 	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>splunk-artifactory</id>
+			<name>Splunk Releases</name>
+			<url>https://splunk.jfrog.io/splunk/ext-releases-local</url>
+		</repository>
+	</repositories>
 
 	<build>
 		<plugins>

@@ -2,6 +2,7 @@ package com.example.demo.controllers;
 
 import java.util.List;
 
+import com.splunk.Receiver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,16 +28,22 @@ public class OrderController {
 	
 	@Autowired
 	private OrderRepository orderRepository;
+
+	@Autowired
+	private Receiver receiver;
 	
 	
 	@PostMapping("/submit/{username}")
 	public ResponseEntity<UserOrder> submit(@PathVariable String username) {
 		User user = userRepository.findByUsername(username);
 		if(user == null) {
+			receiver.log(String.format("request: POST, method: submitOrder, status: ERROR, message: Failed to submit order for user: %s - " +
+					"user does not exist", username));
 			return ResponseEntity.notFound().build();
 		}
 		UserOrder order = UserOrder.createFromCart(user.getCart());
 		orderRepository.save(order);
+		receiver.log(String.format("request: POST, method: submitOrder, status: INFO, message: Submitted order for user: %s", username));
 		return ResponseEntity.ok(order);
 	}
 	
@@ -44,8 +51,11 @@ public class OrderController {
 	public ResponseEntity<List<UserOrder>> getOrdersForUser(@PathVariable String username) {
 		User user = userRepository.findByUsername(username);
 		if(user == null) {
+			receiver.log(String.format("request: GET, method: getOrdersForUser, status: ERROR, message: Failed to get order for user: %s - " +
+					"user does not exist", username));
 			return ResponseEntity.notFound().build();
 		}
+		receiver.log(String.format("request: GET, method: getOrdersForUser, status: INFO, message: Retrieved order for user: %s", username));
 		return ResponseEntity.ok(orderRepository.findByUser(user));
 	}
 }

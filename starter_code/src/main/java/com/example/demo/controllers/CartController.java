@@ -3,6 +3,7 @@ package com.example.demo.controllers;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+import com.splunk.Receiver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,21 +32,29 @@ public class CartController {
 	
 	@Autowired
 	private ItemRepository itemRepository;
+
+	@Autowired
+	private Receiver receiver;
 	
 	@PostMapping("/addToCart")
 	public ResponseEntity<Cart> addTocart(@RequestBody ModifyCartRequest request) {
 		User user = userRepository.findByUsername(request.getUsername());
 		if(user == null) {
+			receiver.log(String.format("request: POST, method: addTocart, status: ERROR, message: Failed to add to cart. ModifyCartRequest: %s - " +
+					"user does not exist", request));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
 		Optional<Item> item = itemRepository.findById(request.getItemId());
 		if(!item.isPresent()) {
+			receiver.log(String.format("request: POST, method: addTocart, status: ERROR, message: Failed to add to cart. ModifyCartRequest: %s - " +
+					"item does not exist", request));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
 		Cart cart = user.getCart();
 		IntStream.range(0, request.getQuantity())
 			.forEach(i -> cart.addItem(item.get()));
 		cartRepository.save(cart);
+		receiver.log(String.format("request: POST, method: addTocart, status: INFO, message: Successfully added to cart. ModifyCartRequest: %s - ", request));
 		return ResponseEntity.ok(cart);
 	}
 	
@@ -53,16 +62,21 @@ public class CartController {
 	public ResponseEntity<Cart> removeFromcart(@RequestBody ModifyCartRequest request) {
 		User user = userRepository.findByUsername(request.getUsername());
 		if(user == null) {
+			receiver.log(String.format("request: POST, method: removeFromcart, status: ERROR, message: Failed to remove from cart. ModifyCartRequest: %s - " +
+					"user does not exist", request));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
 		Optional<Item> item = itemRepository.findById(request.getItemId());
 		if(!item.isPresent()) {
+			receiver.log(String.format("request: POST, method: removeFromcart, status: ERROR, message: Failed to remove from cart. ModifyCartRequest: %s" +
+					"item does not exist", request));
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
 		Cart cart = user.getCart();
 		IntStream.range(0, request.getQuantity())
 			.forEach(i -> cart.removeItem(item.get()));
 		cartRepository.save(cart);
+		receiver.log(String.format("request: POST, method: removeFromcart, status: INFO, message: Successfully removed from cart. ModifyCartRequest: %s", request));
 		return ResponseEntity.ok(cart);
 	}
 		
